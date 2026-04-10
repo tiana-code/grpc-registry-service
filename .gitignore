@@ -1,0 +1,29 @@
+# Build output
+build/
+out/
+*.class
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+application-local.yml
+application-local.properties
+
+# Claude
+CLAUDE.md

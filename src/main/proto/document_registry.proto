@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package com.grpcregistry.proto;
+
+option java_multiple_files = true;
+option java_package = "com.grpcregistry.proto";
+
+import "google/protobuf/timestamp.proto";
+
+service DocumentRegistryService {
+
+  rpc CreateDocument (CreateDocumentRequest) returns (DocumentResponse);
+
+  rpc GetDocument (GetDocumentRequest) returns (DocumentResponse);
+
+  rpc ListDocuments (ListDocumentsRequest) returns (ListDocumentsResponse);
+
+  rpc PublishDocument (PublishDocumentRequest) returns (DocumentResponse);
+
+  rpc ArchiveDocument (ArchiveDocumentRequest) returns (DocumentResponse);
+
+  rpc RevokeDocument (RevokeDocumentRequest) returns (DocumentResponse);
+
+  rpc AddVersion (AddVersionRequest) returns (DocumentVersionResponse);
+
+  rpc GetVersionHistory (GetVersionHistoryRequest) returns (GetVersionHistoryResponse);
+
+  rpc VerifyContentHash (VerifyContentHashRequest) returns (VerifyContentHashResponse);
+}
+
+message CreateDocumentRequest {
+  string title = 1;
+  string content = 2;
+  string idempotency_key = 3;
+}
+
+message GetDocumentRequest {
+  string document_id = 1;
+}
+
+message ListDocumentsRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+message PublishDocumentRequest {
+  string document_id = 1;
+}
+
+message ArchiveDocumentRequest {
+  string document_id = 1;
+  string reason = 2;
+}
+
+message RevokeDocumentRequest {
+  string document_id = 1;
+  string reason = 2;
+}
+
+message AddVersionRequest {
+  string document_id = 1;
+  string content = 2;
+  string changelog = 3;
+  string created_by = 4;
+}
+
+message GetVersionHistoryRequest {
+  string document_id = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+message VerifyContentHashRequest {
+  string document_id = 1;
+  string content = 2;
+}
+
+message DocumentResponse {
+  string id = 1;
+  string title = 2;
+  string content_hash = 3;
+  DocumentStatus status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message DocumentVersionResponse {
+  string version_id = 1;
+  string document_id = 2;
+  string content_hash = 3;
+  string changelog = 4;
+  string created_by = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message ListDocumentsResponse {
+  repeated DocumentResponse documents = 1;
+  int32 total_elements = 2;
+  int32 total_pages = 3;
+  int32 current_page = 4;
+}
+
+message GetVersionHistoryResponse {
+  repeated DocumentVersionResponse versions = 1;
+  int32 total_elements = 2;
+  int32 total_pages = 3;
+  int32 current_page = 4;
+}
+
+message VerifyContentHashResponse {
+  bool valid = 1;
+}
+
+enum DocumentStatus {
+  DOCUMENT_STATUS_UNSPECIFIED = 0;
+  DOCUMENT_STATUS_DRAFT = 1;
+  DOCUMENT_STATUS_PUBLISHED = 2;
+  DOCUMENT_STATUS_ARCHIVED = 3;
+  DOCUMENT_STATUS_REVOKED = 4;
+}

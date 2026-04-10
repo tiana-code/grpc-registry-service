@@ -1,0 +1,32 @@
+micronaut:
+  application:
+    name: grpc-registry-service
+  server:
+    port: 8200
+
+grpc:
+  server:
+    port: 9090
+
+datasources:
+  default:
+    url: jdbc:h2:mem:registrydb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+jpa:
+  default:
+    entity-scan:
+      packages:
+        - com.grpcregistry.model
+        - com.grpcregistry.idempotency
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: create-drop
+        show_sql: false
+
+logger:
+  levels:
+    com.grpcregistry: DEBUG
