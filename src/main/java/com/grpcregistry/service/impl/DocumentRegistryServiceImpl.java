@@ -37,7 +37,7 @@ public class DocumentRegistryServiceImpl implements DocumentRegistryService {
     public Document create(String title, String content, String idempotencyKey) {
         if (idempotencyKey != null) {
             Optional<Document> replayed = idempotencyService.findExisting(idempotencyKey)
-                    .map(ik -> getById(UUID.fromString(ik.getResponseBody())));
+                    .map(existingKey -> getById(UUID.fromString(existingKey.getResponseBody())));
             if (replayed.isPresent()) {
                 return replayed.get();
             }
@@ -121,6 +121,7 @@ public class DocumentRegistryServiceImpl implements DocumentRegistryService {
         }
 
         document.updateContentHash(hash);
+        documentRepository.save(document);
 
         DocumentVersion version = new DocumentVersion(document, hash, changelog, createdBy);
         DocumentVersion saved = documentVersionRepository.save(version);

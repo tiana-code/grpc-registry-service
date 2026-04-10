@@ -17,7 +17,7 @@ public class TracingFilter {
     public static final String HEADER_SPAN_ID = "X-Span-Id";
     public static final String HEADER_PARENT_SPAN_ID = "X-Parent-Span-Id";
 
-    static final ThreadLocal<TraceContext> CURRENT_TRACE = new ThreadLocal<>();
+    private static final CharSequence ATTR_TRACE_CONTEXT = "traceContext";
 
     @RequestFilter
     public void onRequest(HttpRequest<?> request) {
@@ -32,7 +32,7 @@ public class TracingFilter {
                 ? new TraceContext(traceId, TraceContext.generateSpanId(), incomingParentSpanId)
                 : TraceContext.root(traceId);
 
-        CURRENT_TRACE.set(context);
+        request.getAttributes().put(ATTR_TRACE_CONTEXT, context);
 
         log.debug("Trace started: traceId={} spanId={} parentSpanId={} path={}",
                 context.traceId(), context.spanId(), context.parentSpanId(), request.getUri().getPath());
@@ -40,7 +40,7 @@ public class TracingFilter {
 
     @ResponseFilter
     public void onResponse(HttpRequest<?> request, MutableHttpResponse<?> response) {
-        TraceContext context = CURRENT_TRACE.get();
+        TraceContext context = request.getAttribute(ATTR_TRACE_CONTEXT, TraceContext.class).orElse(null);
         if (context != null) {
             response.header(HEADER_TRACE_ID, context.traceId());
             response.header(HEADER_SPAN_ID, context.spanId());
@@ -50,10 +50,9 @@ public class TracingFilter {
             log.debug("Trace completed: traceId={} spanId={} status={}",
                     context.traceId(), context.spanId(), response.getStatus().getCode());
         }
-        CURRENT_TRACE.remove();
     }
 
-    public static TraceContext current() {
-        return CURRENT_TRACE.get();
+    public static TraceContext fromRequest(HttpRequest<?> request) {
+        return request.getAttribute(ATTR_TRACE_CONTEXT, TraceContext.class).orElse(null);
     }
 }
