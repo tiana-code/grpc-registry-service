@@ -4,34 +4,34 @@ Document Registry with gRPC API, Versioning, Tracing and Idempotency
 
 ## What It Does
 
-A document registry exposing both **gRPC** and **REST** APIs. Built with Spring Boot 3 + Java 21. Core capabilities:
+A document registry exposing both **gRPC** and **REST** APIs. Built with Micronaut 4 + Java 21. Core capabilities:
 
-- **Dual-protocol API** – full gRPC service (`DocumentRegistryService`) + REST controller on the same service layer
-- **Document versioning** – full audit trail of every content change, per-document version history
-- **Content hash verification** – SHA-256 fingerprinting prevents silent tampering and detects duplicate uploads before storing
-- **Distributed tracing** – `X-Trace-Id` / `X-Span-Id` / `X-Parent-Span-Id` propagation across service boundaries
-- **Idempotency** – `idempotency_key` on creates replays the original response on retries (true idempotency, not duplicate rejection)
-- **Event-driven audit** – domain events published after successful transaction commit via `@TransactionalEventListener`
+- **Dual-protocol API** - full gRPC service (`DocumentRegistryService`) + REST controller on the same service layer
+- **Document versioning** - full audit trail of every content change, per-document version history
+- **Content hash verification** - SHA-256 fingerprinting prevents silent tampering and detects duplicate uploads before storing
+- **Distributed tracing** - `X-Trace-Id` / `X-Span-Id` / `X-Parent-Span-Id` propagation across service boundaries
+- **Idempotency** - `idempotency_key` on creates replays the original response on retries (true idempotency, not duplicate rejection)
+- **Event-driven audit** - domain events published after successful transaction commit via `@TransactionalEventListener`
 
 ## Practical Use Cases
 
-- **Government document registries** – immutable audit trail, revocation support, content integrity proof
-- **Compliance archives** – PUBLISHED → ARCHIVED lifecycle with event log; content hash as tamper evidence
-- **Contract management** – version history with changelog, optimistic locking prevents lost updates under concurrent edits
-- **Microservice integration** – gRPC for low-latency service-to-service calls, REST for external/browser clients
+- **Document registries** - immutable audit trail, revocation support, content integrity proof
+- **Compliance archives** - PUBLISHED → ARCHIVED lifecycle with event log; content hash as tamper evidence
+- **Contract management** - version history with changelog, optimistic locking prevents lost updates under concurrent edits
+- **Microservice integration** - gRPC for low-latency service-to-service calls, REST for external/browser clients
 
 ## Design Decisions
 
 | Mechanism | What it solves |
 |---|---|
-| gRPC + REST dual API | gRPC for inter-service performance, REST for external consumers — shared service layer |
+| gRPC + REST dual API | gRPC for inter-service performance, REST for external consumers - shared service layer |
 | Protobuf schema (`document_registry.proto`) | Strongly-typed contract between services, backward-compatible evolution |
 | `GrpcExceptionConverter` | Maps domain exceptions to proper gRPC Status codes (NOT_FOUND, ALREADY_EXISTS, FAILED_PRECONDITION) |
-| Idempotency key store with replay | Duplicate requests under retry storms — replays the original response instead of rejecting |
+| Idempotency key store with replay | Duplicate requests under retry storms - replays the original response instead of rejecting |
 | SHA-256 content dedup + unique constraint | Prevents storing byte-identical documents; O(1) hash index lookup backed by DB unique constraint |
-| `@TransactionalEventListener` audit trail | Audit events fire only after successful commit — no false audit records on rollback |
+| `@TransactionalEventListener` audit trail | Audit events fire only after successful commit - no false audit records on rollback |
 | Optimistic locking (`@Version`) | Concurrent updates to the same document fail fast instead of silently overwriting |
-| Response DTOs | REST API contract decoupled from JPA persistence model |
+| Response DTOs (records + `@Serdeable`) | REST API contract decoupled from JPA persistence model |
 
 ## Architecture
 
@@ -97,23 +97,14 @@ gRPC error mapping: `EntityNotFoundException` → `NOT_FOUND`, `DuplicateContent
 | `GET` | `/api/v1/documents/{id}/versions` | Version history (paginated) |
 | `POST` | `/api/v1/documents/{id}/verify` | Verify content hash |
 
-REST errors use RFC 7807 `ProblemDetail` format. All responses include tracing headers.
-
-## Profiles
-
-| Profile | Database | DDL | H2 Console | Log Level |
-|---|---|---|---|---|
-| `dev` (default) | H2 in-memory | `create-drop` | enabled | DEBUG |
-| `test` | H2 in-memory (separate) | `create-drop` | disabled | WARN |
-| `prod` | _(configure datasource)_ | `validate` | disabled | INFO |
+REST errors use structured JSON responses via Micronaut `ExceptionHandler`. All responses include tracing headers.
 
 ## Running
 
 ```bash
-./gradlew bootRun
+./gradlew run
 # REST API: http://localhost:8200/api/v1/documents
 # gRPC:     localhost:9090
-# H2 console: http://localhost:8200/h2-console (dev profile only)
 ```
 
 ## Testing
@@ -124,9 +115,16 @@ REST errors use RFC 7807 `ProblemDetail` format. All responses include tracing h
 
 ## Tech Stack
 
-- Java 21, Spring Boot 3.2
-- **gRPC** + Protobuf 3 (`grpc-spring-boot-starter`)
-- Spring Data JPA + H2 (dev/test; swap to PostgreSQL for production)
-- Jakarta Validation, Spring MVC
+- Java 21, Micronaut 4.4
+- **gRPC** + Protobuf 3 (`micronaut-grpc-server-runtime`)
+- Micronaut Data JPA + Hibernate + H2 (dev/test; swap to PostgreSQL for production)
+- Jakarta Validation, Micronaut HTTP (Netty)
 - Lombok (`@Getter`, `@RequiredArgsConstructor`, `@Slf4j`)
-- JUnit 5, MockMvc, AssertJ
+- JUnit 5, Micronaut Test, AssertJ
+
+## Release Status
+**0.1.0** - API is stabilising but not yet frozen. Minor versions may include breaking changes until `1.0.0`.
+---
+
+## License
+MIT - see [LICENSE](./LICENSE)
