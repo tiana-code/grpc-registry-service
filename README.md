@@ -122,8 +122,6 @@ REST errors use structured JSON responses via Micronaut `ExceptionHandler`. All 
 - Lombok (`@Getter`, `@RequiredArgsConstructor`, `@Slf4j`)
 - JUnit 5, Micronaut Test, AssertJ
 
-## Release Status
-**0.1.0** - API is stabilising but not yet frozen. Minor versions may include breaking changes until `1.0.0`.
 ---
 
 ## License
