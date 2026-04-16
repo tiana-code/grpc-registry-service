@@ -35,20 +35,6 @@ A document registry exposing both **gRPC** and **REST** APIs. Built with Microna
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    gRPC[gRPC Client] -->|protobuf| GS[DocumentGrpcService]
-    REST[REST Client] -->|JSON| RC[DocumentController]
-    GS --> DS[DocumentRegistryService]
-    RC --> DS
-    DS -->|computeHash| CH[ContentHashService]
-    DS -->|idempotency| IS[IdempotencyService]
-    DS -->|save| DR[(DocumentRepository)]
-    DS -->|save version| VR[(DocumentVersionRepository)]
-    DS -->|publish event| EP[DocumentEventPublisher]
-    EP -->|after commit| EL[DocumentEventListener]
-```
-
 ## Document Lifecycle
 
 ```
